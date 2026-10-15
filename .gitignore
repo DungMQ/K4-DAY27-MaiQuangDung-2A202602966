@@ -13,6 +13,8 @@ dist/
 # Virtualenv
 .venv/
 venv/
+env/
+.uv-cache/
 
 # OS
 .DS_Store
