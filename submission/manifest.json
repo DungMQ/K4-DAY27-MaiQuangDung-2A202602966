@@ -9,6 +9,11 @@
       "sha256": "7f7e84e27ecf3b4c03ec8c2b1de7ab569d5f93f2735c1eaa7b74eb6cc3dbb2c2"
     },
     {
+      "path": ".gitattributes",
+      "bytes": 134,
+      "sha256": "e1ba5d4b2c370a80cfb8cc09d3a28d8708228fd83ac68e5e45e9e886b996800b"
+    },
+    {
       "path": ".gitignore",
       "bytes": 299,
       "sha256": "8d2ce0493a0eaf028bad51442937f2393aefff323a79630574590d656d7b34c8"
@@ -50,8 +55,8 @@
     },
     {
       "path": "artifacts/replay_escalation.txt",
-      "bytes": 1664,
-      "sha256": "5bc2f2097cd4371b2f86c26c4eb0bb895c99a2faa0c2981b7c02eba0c1a267d5"
+      "bytes": 1642,
+      "sha256": "de242abd80dd758dbf35ce11a33b57df1d75ce727084f78f7852ff90cb4fd1a8"
     },
     {
       "path": "artifacts/screenshots/01_home.png",

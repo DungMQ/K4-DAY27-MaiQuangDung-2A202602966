@@ -1,25 +1,25 @@
 ───────────────── Replay dcdbaba2-dbd8-40d4-99b7-a2e75758961d ─────────────────
-2026-10-15T09:37:37.231777+00:00  fetch_pr           conf=0.00 risk=med  
-decision=pending    reviewer=-                  0ms  Fetched 1 files, 
+2026-10-15T09:37:37.231777+00:00  fetch_pr           conf=0.00 risk=med
+decision=pending    reviewer=-                  0ms  Fetched 1 files,
 head=demo000
-2026-10-15T09:37:37.274360+00:00  analyze            conf=0.40 risk=high 
-decision=pending    reviewer=-                  0ms  The PR introduces several 
+2026-10-15T09:37:37.274360+00:00  analyze            conf=0.40 risk=high
+decision=pending    reviewer=-                  0ms  The PR introduces several
 security issues, including the use
-2026-10-15T09:37:37.291946+00:00  route              conf=0.40 risk=high 
+2026-10-15T09:37:37.291946+00:00  route              conf=0.40 risk=high
 decision=escalate   reviewer=-                  0ms  Routed to escalate
-2026-10-15T09:37:37.309020+00:00  escalate           conf=0.40 risk=high 
-decision=pending    reviewer=-                  0ms  Questions: What is the 
+2026-10-15T09:37:37.309020+00:00  escalate           conf=0.40 risk=high
+decision=pending    reviewer=-                  0ms  Questions: What is the
 rationale behind using MD5 for passwo
-2026-10-15T09:37:38.025625+00:00  escalate           conf=0.40 risk=high 
-decision=escalate   reviewer=DungMQ             0ms  Q: What is the rationale 
+2026-10-15T09:37:38.025625+00:00  escalate           conf=0.40 risk=high
+decision=escalate   reviewer=DungMQ             0ms  Q: What is the rationale
 behind using MD5 for password hashi
-2026-10-15T09:37:38.043814+00:00  synthesize         conf=0.70 risk=med  
-decision=pending    reviewer=-                  0ms  The reviewer provided 
+2026-10-15T09:37:38.043814+00:00  synthesize         conf=0.70 risk=med
+decision=pending    reviewer=-                  0ms  The reviewer provided
 deployment context; unresolved securit
-2026-10-15T09:37:38.054815+00:00  human_approval     conf=0.70 risk=med  
-decision=pending    reviewer=-                  0ms  Waiting for reviewer 
+2026-10-15T09:37:38.054815+00:00  human_approval     conf=0.70 risk=med
+decision=pending    reviewer=-                  0ms  Waiting for reviewer
 approval
-2026-10-15T09:37:38.477968+00:00  human_approval     conf=0.70 risk=med  
-decision=approve    reviewer=DungMQ             0ms  
-2026-10-15T09:37:38.498491+00:00  commit             conf=0.70 risk=med  
+2026-10-15T09:37:38.477968+00:00  human_approval     conf=0.70 risk=med
+decision=approve    reviewer=DungMQ             0ms
+2026-10-15T09:37:38.498491+00:00  commit             conf=0.70 risk=med
 decision=approve    reviewer=DungMQ            14ms  Comment committed
