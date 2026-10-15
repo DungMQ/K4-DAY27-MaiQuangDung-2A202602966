@@ -1,0 +1,184 @@
+test_cli_escalation_posts_refined_review (test_audit.AuditTests.test_cli_escalation_posts_refined_review) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%, 0 comment(s)
+→ route
+  ✓ decision=escalate (confidence=40%)
+→ synthesize
+  ✓ refined confidence=70%
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/2
+ok
+test_failed_auto_post_is_not_success (test_audit.AuditTests.test_failed_auto_post_is_not_success) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=90%, 0 comment(s)
+→ route
+  ✓ decision=auto_approve (confidence=90%)
+→ auto_approve  high confidence — posting directly
+  ✗ post failed: No permission
+ok
+test_list_sessions_reports_highest_risk (test_audit.AuditTests.test_list_sessions_reports_highest_risk) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%, 0 comment(s)
+→ route
+  ✓ decision=escalate (confidence=40%)
+ok
+test_reject_and_edit (test_audit.AuditTests.test_reject_and_edit) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  · skipping comment (choice=reject)
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_reopen_and_resume_without_duplicate_requests (test_audit.AuditTests.test_reopen_and_resume_without_duplicate_requests) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_session_helper_restores_without_restarting (test_audit.AuditTests.test_session_helper_restores_without_restarting) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_ui_escalation_requires_final_confirmation (test_audit.AuditTests.test_ui_escalation_requires_final_confirmation) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%, 0 comment(s)
+→ route
+  ✓ decision=escalate (confidence=40%)
+→ synthesize
+  ✓ refined confidence=70%
+→ commit
+  · skipping comment (choice=reject)
+ok
+test_all_boundaries (test_exercises.ConfidenceTests.test_all_boundaries) ... → route
+→ route
+→ route
+→ route
+→ route
+→ route
+→ route
+ok
+test_full_graph_routes (test_exercises.ConfidenceTests.test_full_graph_routes) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=90%
+→ route
+✓ AUTO APPROVE — high confidence, no human needed
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%
+→ route
+✓ HUMAN APPROVAL — placeholder, exercise 2 will pause here
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%
+→ route
+✓ ESCALATE — placeholder, exercise 3 will ask the reviewer questions
+ok
+test_approval_rejection_and_edit (test_exercises.HumanTests.test_approval_rejection_and_edit) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  · skipping comment (choice=reject)
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_escalation_synthesizes_with_context (test_exercises.HumanTests.test_escalation_synthesizes_with_context) ... → fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%, 1 question(s)
+→ route
+  ✓ decision=escalate (confidence=40%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/2
+ok
+test_approve_and_restore_after_refresh (test_ui.UITests.test_approve_and_restore_after_refresh) ... 2026-10-15 16:29:05.215 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+2026-10-15 16:29:06.505 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_auto_post_failure_has_no_success_banner (test_ui.UITests.test_auto_post_failure_has_no_success_banner) ... 2026-10-15 16:29:06.749 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=90%, 0 comment(s)
+→ route
+  ✓ decision=auto_approve (confidence=90%)
+→ auto_approve  high confidence — posting directly
+  ✗ post failed: Forbidden
+ok
+test_edit_and_empty_edit_validation (test_ui.UITests.test_edit_and_empty_edit_validation) ... 2026-10-15 16:29:07.168 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=65%, 0 comment(s)
+→ route
+  ✓ decision=human_approval (confidence=65%)
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_escalation_then_confirm (test_ui.UITests.test_escalation_then_confirm) ... 2026-10-15 16:29:07.807 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+→ fetch_pr
+  ✓ 1 files, head abc1234
+→ analyze
+  ✓ confidence=40%, 0 comment(s)
+→ route
+  ✓ decision=escalate (confidence=40%)
+→ synthesize
+  ✓ refined confidence=70%
+→ commit
+  ✓ posted comment to https://github.com/o/r/pull/1
+ok
+test_invalid_url_does_not_fetch (test_ui.UITests.test_invalid_url_does_not_fetch) ... 2026-10-15 16:29:08.564 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 8.142s
+
+OK

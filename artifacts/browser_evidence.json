@@ -1,0 +1,53 @@
+{
+  "mode": "real browser + real LangGraph/SQLite; mocked LLM/GitHub",
+  "captured_at": "2026-10-15T16:37:32.921788+07:00",
+  "sessions": {
+    "approve": {
+      "thread_id": "960735fa-0f6c-47c0-b0b2-ca780d6a00f6",
+      "events": 6,
+      "last_action": "commit",
+      "last_reason": "Comment committed"
+    },
+    "escalation": {
+      "thread_id": "dcdbaba2-dbd8-40d4-99b7-a2e75758961d",
+      "events": 9,
+      "last_action": "commit",
+      "last_reason": "Comment committed"
+    },
+    "reject": {
+      "thread_id": "6ff3a827-8529-4212-a454-47721cc868d6",
+      "events": 6,
+      "last_action": "commit",
+      "last_reason": "Comment rejected"
+    },
+    "edit": {
+      "thread_id": "69afb2b2-99ad-4e58-99b7-4b38cd0dd12f",
+      "events": 6,
+      "last_action": "commit",
+      "last_reason": "Comment committed"
+    },
+    "auto": {
+      "thread_id": "30f78979-a732-40ef-9423-292b2f3d55b3",
+      "events": 4,
+      "last_action": "auto_approve",
+      "last_reason": "Comment committed"
+    }
+  },
+  "screenshots": [
+    "artifacts/screenshots/01_home.png",
+    "artifacts/screenshots/02_approval.png",
+    "artifacts/screenshots/02b_approval_controls.png",
+    "artifacts/screenshots/03_approved.png",
+    "artifacts/screenshots/04_escalation.png",
+    "artifacts/screenshots/04b_escalation_questions.png",
+    "artifacts/screenshots/05_refined.png",
+    "artifacts/screenshots/06_rejected.png",
+    "artifacts/screenshots/07_auto_and_sessions.png"
+  ],
+  "console_errors": [],
+  "page_errors": [],
+  "browser": "155.0.8059.40",
+  "audit_rows": 31,
+  "high_risk_auto_count": 0,
+  "approval_confidence_average": 0.675
+}

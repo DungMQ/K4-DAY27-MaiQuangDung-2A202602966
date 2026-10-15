@@ -6,6 +6,11 @@ On Windows, the dependencies for this checkout are installed in `env`.
 
 Submission repository: <https://github.com/DungMQ/K4-DAY27-MaiQuangDung-2A202602966>.
 
+Submission report: [PDF](submission/Bao_cao_DAY27_MaiQuangDung_2A202602966.pdf),
+[editable Word](submission/Bao_cao_DAY27_MaiQuangDung_2A202602966.docx),
+and [full Markdown with evidence](BAO_CAO.md).
+Complete hand-in bundle: [ZIP with source, reports and evidence](submission/K4-DAY27-MaiQuangDung-2A202602966.zip).
+
 A 2-hour lab that builds a human-in-the-loop pull-request review agent in **LangGraph**, end-to-end.
 
 > 1. Agent reads a PR, analyzes code changes, proposes review comments.

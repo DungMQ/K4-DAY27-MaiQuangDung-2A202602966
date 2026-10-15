@@ -1,0 +1,12 @@
+{
+  "pdf_pages": 19,
+  "pdf_images": 9,
+  "vietnamese_text_verified": true,
+  "docx_tables": 10,
+  "docx_images": 9,
+  "source_sha256": "a47a455b2bc55aa768535553b28d137a995eba41b6caea0743d01b459b2b419f",
+  "files": [
+    "submission\\Bao_cao_DAY27_MaiQuangDung_2A202602966.pdf",
+    "submission\\Bao_cao_DAY27_MaiQuangDung_2A202602966.docx"
+  ]
+}

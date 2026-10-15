@@ -1,0 +1,84 @@
+{
+  "executed_at": "2026-10-15T16:29:08.824667+07:00",
+  "python": "3.11.9",
+  "os": "Windows-10-10.0.26300-SP0",
+  "tests_run": 16,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "successful": true,
+  "cases": [
+    {
+      "id": "test_audit.AuditTests.test_cli_escalation_posts_refined_review",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_failed_auto_post_is_not_success",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_list_sessions_reports_highest_risk",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_reject_and_edit",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_reopen_and_resume_without_duplicate_requests",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_session_helper_restores_without_restarting",
+      "result": "PASS"
+    },
+    {
+      "id": "test_audit.AuditTests.test_ui_escalation_requires_final_confirmation",
+      "result": "PASS"
+    },
+    {
+      "id": "test_exercises.ConfidenceTests.test_all_boundaries",
+      "result": "PASS"
+    },
+    {
+      "id": "test_exercises.ConfidenceTests.test_full_graph_routes",
+      "result": "PASS"
+    },
+    {
+      "id": "test_exercises.HumanTests.test_approval_rejection_and_edit",
+      "result": "PASS"
+    },
+    {
+      "id": "test_exercises.HumanTests.test_escalation_synthesizes_with_context",
+      "result": "PASS"
+    },
+    {
+      "id": "test_ui.UITests.test_approve_and_restore_after_refresh",
+      "result": "PASS"
+    },
+    {
+      "id": "test_ui.UITests.test_auto_post_failure_has_no_success_banner",
+      "result": "PASS"
+    },
+    {
+      "id": "test_ui.UITests.test_edit_and_empty_edit_validation",
+      "result": "PASS"
+    },
+    {
+      "id": "test_ui.UITests.test_escalation_then_confirm",
+      "result": "PASS"
+    },
+    {
+      "id": "test_ui.UITests.test_invalid_url_does_not_fetch",
+      "result": "PASS"
+    }
+  ],
+  "versions": {
+    "langgraph": "1.2.0",
+    "langgraph-checkpoint-sqlite": "3.1.2",
+    "langchain-openai": "1.2.1",
+    "streamlit": "1.66.0",
+    "pydantic": "2.13.4",
+    "aiosqlite": "0.22.1"
+  }
+}
