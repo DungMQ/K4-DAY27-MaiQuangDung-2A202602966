@@ -10,17 +10,9 @@ Goals:
    so the full session can be replayed.
 3. Verify with `uv run python -m audit.replay --thread <id>`.
 
-Approach:
-    - Read `node_fetch_pr` below — it is the one fully-worked example. Pay attention
-      to *why* each AuditEntry field has the value it does at that step.
-    - For every other node, you decide what to log. Field reference:
-      `common/schemas.py:AuditEntry`. Helper: `risk_level_for(confidence)`.
-    - Implement the one-line body of `audit()`. Everything else (graph wiring,
-      checkpointer setup, interrupt/resume loop) is already done for you.
-
-TODOs to complete (10 total): the audit() body, ONE AuditEntry per node for
-analyze/route/commit/auto_approve/synthesize, TWO each for human_approval and
-escalate (before + after the interrupt).
+Request events are written in separate nodes before the interrupt nodes.
+LangGraph re-executes interrupted nodes on resume; this keeps pending audit
+rows from being duplicated. The UI additionally confirms refined reviews.
 """
 
 from __future__ import annotations
@@ -36,7 +28,6 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 from rich.console import Console
-from rich.panel import Panel
 
 from common.db import db_path, write_audit_event
 from common.github import fetch_pr, post_review_comment
@@ -48,6 +39,11 @@ from common.schemas import (
     PRAnalysis,
     ReviewState,
     risk_level_for,
+)
+from exercises.exercise_1_confidence import review_messages
+from exercises.exercise_2_hitl import approval_payload, review_serializer, validate_approval
+from exercises.exercise_3_escalation import (
+    _render_comment_body, handle_interrupt, synthesis_messages, validate_answers,
 )
 
 
@@ -61,9 +57,17 @@ async def audit(state, entry: AuditEntry) -> None:
     `thread_id` and `pr_url` are taken from `state` so callers only build
     the entry itself.
     """
-    # TODO: call write_audit_event(thread_id=state["thread_id"],
-    #                              pr_url=state["pr_url"], entry=entry)
-    raise NotImplementedError("Implement the audit() body — one call to write_audit_event")
+    await write_audit_event(thread_id=state["thread_id"], pr_url=state["pr_url"], entry=entry)
+
+
+def event(state, action, t0, decision, reason, *, reviewer_id=None) -> AuditEntry:
+    confidence = state["analysis"].confidence
+    return AuditEntry(
+        agent_id=AGENT_ID, action=action, confidence=confidence,
+        risk_level=risk_level_for(confidence), reviewer_id=reviewer_id,
+        decision=decision, reason=reason,
+        execution_time_ms=int((time.monotonic() - t0) * 1000),
+    )
 
 
 # ─── Reference example — read this carefully ───────────────────────────────
@@ -102,12 +106,9 @@ async def node_analyze(state):
     t0 = time.monotonic()
     llm = get_llm().with_structured_output(PRAnalysis)
     with console.status("[dim]LLM reviewing the diff...[/dim]"):
-        a: PRAnalysis = await llm.ainvoke([
-            {"role": "system", "content": "Senior reviewer. Structured output."},
-            {"role": "user", "content": f"Title: {state['pr_title']}\nDiff:\n{state['pr_diff']}"},
-        ])
+        a: PRAnalysis = await llm.ainvoke(review_messages(state))
     console.print(f"  [green]✓[/green] confidence={a.confidence:.0%}, {len(a.comments)} comment(s)")
-    # TODO: build and emit an AuditEntry for this step. Use the LLM's output `a`.
+    await audit(state, event({**state, "analysis": a}, "analyze", t0, "pending", a.confidence_reasoning))
     return {"analysis": a}
 
 
@@ -122,44 +123,23 @@ async def node_route(state):
     else:
         decision = "human_approval"
     console.print(f"  [green]✓[/green] decision=[bold]{decision}[/bold] (confidence={c:.0%})")
-    # TODO: emit an AuditEntry — this is the first row where `decision` is real.
+    audit_decision = {"auto_approve": "auto", "human_approval": "pending", "escalate": "escalate"}[decision]
+    await audit(state, event(state, "route", t0, audit_decision, f"Routed to {decision}"))
     return {"decision": decision}
+
+
+async def node_request_approval(state):
+    t0 = time.monotonic()
+    await audit(state, event(state, "human_approval", t0, "pending", "Waiting for reviewer approval"))
+    return {}
 
 
 async def node_human_approval(state):
     t0 = time.monotonic()
-    a = state["analysis"]
-
-    # TODO #1 — audit BEFORE the interrupt. No human has responded yet.
-
-    resp = interrupt({
-        "kind": "approval_request",
-        "pr_url": state["pr_url"],
-        "confidence": a.confidence,
-        "confidence_reasoning": a.confidence_reasoning,
-        "summary": a.summary,
-        "comments": [c.model_dump() for c in a.comments],
-        "diff_preview": state["pr_diff"][:2000],
-    })
-
-    # TODO #2 — audit AFTER resume. Now you know the reviewer's choice
-    #           (approve / reject / edit), their feedback, and who they are
-    #           (os.environ.get("GITHUB_USER")).
+    resp = validate_approval(interrupt(approval_payload(state)))
+    await audit(state, event(state, "human_approval", t0, resp["choice"], resp["feedback"],
+                             reviewer_id=os.environ.get("GITHUB_USER") or None))
     return {"human_choice": resp.get("choice"), "human_feedback": resp.get("feedback")}
-
-
-def _render_comment_body(state) -> str:
-    a = state["analysis"]
-    lines = [f"### Automated review (confidence {a.confidence:.0%})", "", a.summary, ""]
-    for c in a.comments:
-        lines.append(f"- **[{c.severity}]** `{c.file}:{c.line or '?'}` — {c.body}")
-    if state.get("human_feedback"):
-        lines.append(f"\n_Reviewer note: {state['human_feedback']}_")
-    if state.get("escalation_answers"):
-        lines.append("\n_Reviewer answered escalation questions:_")
-        for q, ans in state["escalation_answers"].items():
-            lines.append(f"> **{q}** {ans}")
-    return "\n".join(lines)
 
 
 def _post(state) -> str:
@@ -175,33 +155,40 @@ def _post(state) -> str:
 async def node_commit(state):
     console.print("[cyan]→ commit[/cyan]")
     t0 = time.monotonic()
-    # Two paths converge here:
-    #   1. human_approval → commit (only post if approved)
-    #   2. escalate → synthesize → commit (always post the refined review)
-    if state.get("escalation_answers") or state.get("human_choice") == "approve":
+    # An explicit rejection always wins, including after escalation in the UI.
+    choice = state.get("human_choice")
+    if choice in {"approve", "edit"} or (state.get("escalation_answers") and choice is None):
         action = _post(state)
     else:
         console.print(f"  [yellow]·[/yellow] skipping comment (choice={state.get('human_choice')})")
         action = "rejected"
-    # TODO: emit an AuditEntry summarising what was committed (or rejected).
-    return {"final_action": action}
+    decision = choice or ("escalate" if state.get("escalation_answers") else "reject")
+    await audit(state, event(state, "commit", t0, decision,
+                             f"Comment {action}", reviewer_id=os.environ.get("GITHUB_USER") or None))
+    return {"final_action": action,
+            "posted_comment_body": _render_comment_body(state) if action == "committed" else None}
 
 
 async def node_auto_approve(state):
     console.print("[cyan]→ auto_approve[/cyan]  [dim]high confidence — posting directly[/dim]")
     t0 = time.monotonic()
-    a = state["analysis"]
     action = _post(state)
-    # TODO: emit an AuditEntry — no human was involved, decision is "auto".
-    return {"final_action": f"auto_{action}"}
+    await audit(state, event(state, "auto_approve", t0, "auto", f"Comment {action}"))
+    return {"final_action": f"auto_{action}",
+            "posted_comment_body": _render_comment_body(state) if action == "committed" else None}
+
+
+async def node_request_escalation(state):
+    t0 = time.monotonic()
+    questions = state["analysis"].escalation_questions or ["What is the intent of this PR?"]
+    await audit(state, event(state, "escalate", t0, "pending", "Questions: " + " | ".join(questions)))
+    return {}
 
 
 async def node_escalate(state):
     t0 = time.monotonic()
     a = state["analysis"]
     questions = a.escalation_questions or ["What is the intent of this PR?"]
-
-    # TODO #1 — audit BEFORE the interrupt (reviewer hasn't answered yet).
 
     answers = interrupt({
         "kind": "escalation",
@@ -211,35 +198,35 @@ async def node_escalate(state):
         "summary": a.summary,
         "risk_factors": a.risk_factors,
         "questions": questions,
+        "diff_preview": state["pr_diff"],
     })
 
-    # TODO #2 — audit AFTER resume. You now have the answers.
+    answers = validate_answers(questions, answers)
+    reason = "\n".join(f"Q: {q}\nA: {answer}" for q, answer in answers.items())
+    await audit(state, event(state, "escalate", t0, "escalate", reason,
+                             reviewer_id=os.environ.get("GITHUB_USER") or None))
     return {"escalation_answers": answers}
 
 
 async def node_synthesize(state):
     console.print("[cyan]→ synthesize[/cyan]")
     t0 = time.monotonic()
-    qa = "\n".join(f"Q: {q}\nA: {a}" for q, a in (state.get("escalation_answers") or {}).items())
     llm = get_llm().with_structured_output(PRAnalysis)
     with console.status("[dim]LLM refining review with reviewer answers...[/dim]"):
-        refined: PRAnalysis = await llm.ainvoke([
-            {"role": "system", "content": "Refine review with reviewer answers."},
-            {"role": "user", "content": f"Diff:\n{state['pr_diff']}\n\nQ&A:\n{qa}"},
-        ])
+        refined: PRAnalysis = await llm.ainvoke(synthesis_messages(state))
     console.print(f"  [green]✓[/green] refined confidence={refined.confidence:.0%}")
-    # TODO: emit an AuditEntry — use the NEW confidence (refined.confidence),
-    #       which should be higher than the original analysis.
-    # node_commit will run next and post the refined review to the PR.
+    await audit(state, event({**state, "analysis": refined}, "synthesize", t0, "pending", refined.confidence_reasoning))
     return {"analysis": refined}
 
 
-def build_graph(checkpointer):
+def build_graph(checkpointer, *, confirm_after_escalation=False):
+    checkpointer.serde = review_serializer()
     g = StateGraph(ReviewState)
     for name, fn in [
         ("fetch_pr", node_fetch_pr), ("analyze", node_analyze), ("route", node_route),
         ("auto_approve", node_auto_approve), ("human_approval", node_human_approval),
         ("commit", node_commit), ("escalate", node_escalate), ("synthesize", node_synthesize),
+        ("request_approval", node_request_approval), ("request_escalation", node_request_escalation),
     ]:
         g.add_node(name, fn)
     g.add_edge(START, "fetch_pr")
@@ -247,28 +234,47 @@ def build_graph(checkpointer):
     g.add_edge("analyze", "route")
     g.add_conditional_edges(
         "route", lambda s: s["decision"],
-        {"auto_approve": "auto_approve", "human_approval": "human_approval", "escalate": "escalate"},
+        {"auto_approve": "auto_approve", "human_approval": "request_approval", "escalate": "request_escalation"},
     )
     g.add_edge("auto_approve", END)
+    g.add_edge("request_approval", "human_approval")
+    g.add_edge("request_escalation", "escalate")
     g.add_edge("human_approval", "commit")
     g.add_edge("commit", END)
     g.add_edge("escalate", "synthesize")
-    g.add_edge("synthesize", "commit")
+    g.add_edge("synthesize", "request_approval" if confirm_after_escalation else "commit")
     return g.compile(checkpointer=checkpointer)
 
 
-def handle_interrupt(payload):
-    kind = payload["kind"]
-    if kind == "approval_request":
-        console.print(Panel.fit(
-            payload["summary"], title=f"conf={payload['confidence']:.0%}", border_style="green",
-        ))
-        choice = console.input("approve/reject/edit? ").strip().lower()
-        return {"choice": choice, "feedback": console.input("Feedback: ").strip()}
-    return {q: console.input(f"Q: {q}\nA: ").strip() for q in payload["questions"]}
+def snapshot_result(snapshot) -> dict:
+    result = dict(snapshot.values)
+    interrupts = tuple(i for task in snapshot.tasks for i in task.interrupts)
+    if interrupts:
+        result["__interrupt__"] = interrupts
+    return result
 
 
-async def run(pr_url: str, thread_id: str | None):
+async def invoke_session(graph, pr_url, thread_id, resume_value=None):
+    """Start a new session, restore a paused/completed one, or resume pending work."""
+    cfg = {"configurable": {"thread_id": thread_id}}
+    snapshot = await graph.aget_state(cfg)
+    if snapshot.values:
+        if pr_url and snapshot.values["pr_url"] != pr_url:
+            raise ValueError("This thread belongs to a different PR. Start a new session.")
+        if resume_value is not None:
+            if not snapshot.next:
+                raise ValueError("This session is already complete.")
+            return await graph.ainvoke(Command(resume=resume_value), cfg)
+        result = snapshot_result(snapshot)
+        if result.get("__interrupt__") or not snapshot.next:
+            return result
+        return await graph.ainvoke(None, cfg)
+    if resume_value is not None or not pr_url:
+        raise ValueError("No checkpoint found. Start with a PR URL.")
+    return await graph.ainvoke({"pr_url": pr_url, "thread_id": thread_id}, cfg)
+
+
+async def run(pr_url: str | None, thread_id: str | None):
     thread_id = thread_id or str(uuid.uuid4())
     console.rule("[bold]Exercise 4 — SQLite audit trail[/bold]")
     console.print(f"[dim]PR: {pr_url}[/dim]")
@@ -277,12 +283,10 @@ async def run(pr_url: str, thread_id: str | None):
     async with AsyncSqliteSaver.from_conn_string(db_path()) as cp:
         await cp.setup()
         app = build_graph(cp)
-        cfg = {"configurable": {"thread_id": thread_id}}
-
-        result = await app.ainvoke({"pr_url": pr_url, "thread_id": thread_id}, cfg)
-        while "__interrupt__" in result:
+        result = await invoke_session(app, pr_url, thread_id)
+        while result.get("__interrupt__"):
             payload = result["__interrupt__"][0].value
-            result = await app.ainvoke(Command(resume=handle_interrupt(payload)), cfg)
+            result = await invoke_session(app, pr_url, thread_id, handle_interrupt(payload))
 
         console.rule("Final")
         console.print(f"final_action = {result.get('final_action')}")
@@ -292,9 +296,11 @@ async def run(pr_url: str, thread_id: str | None):
 def main():
     load_dotenv()
     p = argparse.ArgumentParser()
-    p.add_argument("--pr", required=True)
+    p.add_argument("--pr", help="PR URL (optional when resuming --thread)")
     p.add_argument("--thread", help="Resume an existing thread")
     args = p.parse_args()
+    if not args.pr and not args.thread:
+        p.error("provide --pr or --thread")
     asyncio.run(run(args.pr, args.thread))
 
 
