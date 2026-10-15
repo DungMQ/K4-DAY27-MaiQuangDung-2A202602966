@@ -1,0 +1,104 @@
+{
+  "github": {
+    "ok": true,
+    "user": "DungMQ"
+  },
+  "pr_1": {
+    "url": "https://github.com/VinUni-AI20k/PR-Demo/pull/1",
+    "files": 3,
+    "head_sha": "164615656d47c67b0857daf02fcd412c55333d5d",
+    "confidence": 0.58,
+    "branch": "human_approval",
+    "analysis": {
+      "summary": "This PR adds a priority field to tasks in a task tracking application, allowing users to specify the priority level (normal, high, urgent) when adding tasks. It updates the CLI, task model, and storage schema accordingly.",
+      "risk_factors": [
+        "Potential for incorrect priority values if not validated properly.",
+        "Database schema changes may affect existing data if not handled correctly."
+      ],
+      "comments": [
+        {
+          "file": "tasktrack/cli.py",
+          "line": 10,
+          "severity": "issue",
+          "body": "Consider adding validation for the priority argument to ensure it falls within the expected range (0-2). Without validation, users could input invalid values."
+        },
+        {
+          "file": "tasktrack/models.py",
+          "line": 7,
+          "severity": "suggestion",
+          "body": "Add a docstring to the Task class to explain the purpose of the priority field and its valid values."
+        },
+        {
+          "file": "tasktrack/storage.py",
+          "line": 15,
+          "severity": "issue",
+          "body": "The database schema change should include a migration strategy for existing users. Ensure that existing tasks are assigned a default priority of 0."
+        },
+        {
+          "file": "tasktrack/storage.py",
+          "line": 22,
+          "severity": "issue",
+          "body": "Consider adding a check to ensure that the priority value is within the expected range (0-2) when inserting into the database."
+        }
+      ],
+      "confidence": 0.58,
+      "confidence_reasoning": "The changes introduce a new feature with potential risks related to data integrity and user input validation. The review highlights issues that need clarification or additional handling, particularly around input validation and database migrations.",
+      "escalation_questions": [
+        "What is the intended behavior if a user inputs a priority value outside the range of 0-2?",
+        "How should existing tasks in the database be handled during this schema update?",
+        "Is there a plan to implement input validation for the priority field in the CLI?",
+        "Are there any tests in place to ensure that tasks with different priority levels are handled correctly?"
+      ]
+    }
+  },
+  "pr_2": {
+    "url": "https://github.com/VinUni-AI20k/PR-Demo/pull/2",
+    "files": 4,
+    "head_sha": "501f95e016f9cd241cb1a7dd60b9a27102bcb413",
+    "confidence": 0.55,
+    "branch": "escalate",
+    "analysis": {
+      "summary": "This PR introduces user login functionality and cloud synchronization for a task tracking application. It adds password hashing, token issuance, and the ability to push tasks to a cloud service.",
+      "risk_factors": [
+        "Use of MD5 for password hashing is insecure and outdated.",
+        "SQL injection risk due to string interpolation in SQL queries.",
+        "Lack of proper error handling for network requests and file operations.",
+        "Hard-coded user ID in the sync functionality poses a security risk."
+      ],
+      "comments": [
+        {
+          "file": "tasktrack/auth.py",
+          "line": 7,
+          "severity": "issue",
+          "body": "MD5 is not a secure hashing algorithm for passwords. Consider using a stronger algorithm like bcrypt or Argon2."
+        },
+        {
+          "file": "tasktrack/storage.py",
+          "line": 22,
+          "severity": "issue",
+          "body": "SQL injection risk due to direct string interpolation in the SQL query. Use parameterized queries to prevent this."
+        },
+        {
+          "file": "tasktrack/sync.py",
+          "line": 30,
+          "severity": "issue",
+          "body": "Lack of error handling for the network request. Consider adding try-except blocks to handle potential exceptions."
+        },
+        {
+          "file": "tasktrack/sync.py",
+          "line": 38,
+          "severity": "issue",
+          "body": "Hard-coded user ID in _current_user_id() function is a security risk. This should be dynamically retrieved based on the logged-in user."
+        }
+      ],
+      "confidence": 0.55,
+      "confidence_reasoning": "The PR introduces several security issues, including the use of MD5 for password hashing and SQL injection vulnerabilities. Additionally, the hard-coded user ID and lack of error handling raise concerns. These issues require human review to determine the intent and necessary safeguards before deployment.",
+      "escalation_questions": [
+        "What is the rationale behind using MD5 for password hashing instead of a more secure algorithm?",
+        "How do you plan to handle user authentication and authorization securely in the future?",
+        "What safeguards are in place for handling sensitive data during cloud synchronization?",
+        "Can you clarify the intended behavior for user management and how user IDs will be assigned?"
+      ]
+    }
+  }
+}

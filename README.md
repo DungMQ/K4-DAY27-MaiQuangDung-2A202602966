@@ -1,5 +1,11 @@
 # Day27 — Track 3: HITL PR Review Agent
 
+**Completed solution:** all five exercises are implemented. See [BAO_CAO.md](BAO_CAO.md)
+for Vietnamese setup instructions, verification results, and implementation notes.
+On Windows, the dependencies for this checkout are installed in `env`.
+
+Submission repository: <https://github.com/DungMQ/K4-DAY27-MaiQuangDung-2A202602966>.
+
 A 2-hour lab that builds a human-in-the-loop pull-request review agent in **LangGraph**, end-to-end.
 
 > 1. Agent reads a PR, analyzes code changes, proposes review comments.
